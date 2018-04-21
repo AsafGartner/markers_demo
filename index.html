@@ -1,0 +1,186 @@
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            .demo_area {
+                height: 400px;
+                width: 400px;
+                margin: 0 auto;
+            }
+
+            .controls {
+                width: 400px;
+                margin: 0 auto;
+                text-align: center;
+            }
+
+            .explanation {
+                width: 400px;
+                margin: 0 auto;
+            }
+
+            .marker_container {
+                position: relative;
+                display: inline-block;
+            }
+
+            .marker {
+                background: grey;
+                transition: transform 500ms ease-in-out;
+            }
+
+            .marker .content {
+                padding: 10px;
+            }
+
+            .marker.progress {
+                overflow: hidden;
+            }
+
+            .marker .content {
+                width: 200px;
+            }
+
+            .marker.progress {
+                background: black;
+                color: white;
+            }
+
+            .border {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 200px;
+                transition: transform 500ms ease-in-out;
+            }
+
+            .marker:not(.progress), .border {
+                transform: translate(100px, 170px);
+            }
+
+            .exploded .border {
+                border: 1px dashed black;
+            }
+
+            .exploded .marker:not(.progress) {
+                transform: translate(220px, 100px) skew(0, 15deg);
+            }
+
+            .exploded .border {
+                transform: translate(100px, 170px) skew(0, 15deg);
+            }
+
+            .exploded .border:last-child {
+                transform: translate(-20px, 240px) skew(0, 15deg);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="demo_area">
+            <div class="marker_container">
+                <div class="marker">
+                    <div class="content">
+                        Explain how the markers work
+                    </div>
+                </div>
+                <div class="border">
+                    <div class="marker progress fade">
+                        <div class="content">
+                            Explain how the markers work
+                        </div>
+                    </div>
+                </div>
+                <div class="border">
+                    <div class="marker progress solid">
+                        <div class="content">
+                            Explain how the markers work
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="controls">
+            <a href="javascript:;" class="explode">Explode</a>
+            <br />
+            Progress: <input id="range" type="range" min=0 max=1 step=0.00001 value=0.0 />
+            <span class="input_value"></span>
+            <a href="javascript:;" class="playpause">Pause</a>
+            <br />
+            <input id="checkbox" type="checkbox" name="checkbox" checked /><label for="checkbox">Middle div</label>
+        </div>
+        <div class="explanation">
+            <h1>How it works</h1>
+            <p>
+                Normally you'd want to have two divs right on top of each other.
+                The first div would have the content with the regular style, and the second div would have the exact same content, and the exact same style that relates to size, but with different colors.
+                Once you have that, you can resize the 2nd div to clip the contents and create a progress bar effect.
+                The problem is that browsers don't do sub-pixel rendering of divs. Which means that if you set the width of a div to 10.2px, it'll round it down to 10px. This results in the progress bar advancing in whole pixels, which feels bad when progression is slow (as in this demo).
+                We solve this by introducing a 3rd div. It sits between the two divs and is styled exactly the same as the progress div, but its width is 1 pixel larger than the progress bar. We then set the opacity to the remaining fraction of the width.
+                That is, if we want a 10.2px progress bar, we set the regular progress div to 10px, and the faded div to 11px. Then we set the opacity of the faded div to 0.2. This gives a much smoother motion (although I suspect the browsers don't blend colors in linear space, so we can probably improve that even further by blending the colors manually instead of setting the opacity).
+            </p>
+        </div>
+
+        <script>
+var input = document.querySelector("input");
+var marker = document.querySelector(".marker_container");
+var markerProgress = marker.querySelector(".marker.solid");
+var markerProgressFade = marker.querySelector(".marker.fade");
+var playpause = document.querySelector(".playpause");
+var playing = true;
+input.addEventListener("input", function() {
+    updateMarker();
+    playpause.textContent = "Play";
+    playing = false;
+});
+
+playpause.addEventListener("click", function() {
+    playing = !playing;
+    if (playing) {
+        playpause.textContent = "Pause";
+    } else {
+        playpause.textContent = "Play";
+    }
+});
+
+document.querySelector(".explode").addEventListener("click", function() {
+    document.querySelector(".demo_area").classList.toggle("exploded");
+});
+
+document.querySelector("#checkbox").addEventListener("input", function() {
+    if (document.querySelector("#checkbox").checked) {
+        markerProgressFade.style.visibility = "visible";
+    } else {
+        markerProgressFade.style.visibility = "hidden";
+    }
+});
+
+function updateMarker() {
+    var t = parseFloat(input.value);
+    var maxWidth = marker.offsetWidth;
+    markerProgress.style.width = Math.floor(t*maxWidth) + "px";
+    markerProgressFade.style.width = Math.ceil(t*maxWidth) + "px";
+    markerProgressFade.style.opacity = t*maxWidth - Math.floor(t*maxWidth);
+    document.querySelector(".input_value").textContent = t.toFixed(5);
+}
+
+function doFrame() {
+    if (playing) {
+        var val = parseFloat(input.value);
+        val += 0.00005;
+        if (val > 1.0) {
+            val = 0;
+        }
+        input.value = val;
+        updateMarker();
+    }
+    requestAnimationFrame(doFrame);
+}
+
+doFrame();
+        </script>
+    </body>
+</html>
+
