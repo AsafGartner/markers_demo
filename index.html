@@ -135,8 +135,6 @@ var playpause = document.querySelector(".playpause");
 var playing = true;
 input.addEventListener("input", function() {
     updateMarker();
-    playpause.textContent = "Play";
-    playing = false;
 });
 
 playpause.addEventListener("click", function() {
